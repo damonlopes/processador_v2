@@ -1,7 +1,7 @@
 const { exec } = require("child_process");
 const fs = require("fs");
 
-fs.readdir('./app', async function (err, fileNames) {
+fs.readdir('.', async function (err, fileNames) {
     if (err) {
         return console.log('Unable to scan directory: ' + err);
     }
