@@ -14,7 +14,6 @@ ARCHITECTURE a_reg_flag_tb OF reg_flag_tb IS
             flagcarry_in : IN std_logic;
             flagzero_in : IN std_logic;
             sel_branch : IN unsigned (2 DOWNTO 0) := "000";
-            opcode : IN unsigned (3 DOWNTO 0) := "0000";
 
             flag_out : OUT std_logic
         );
@@ -22,7 +21,6 @@ ARCHITECTURE a_reg_flag_tb OF reg_flag_tb IS
 
     SIGNAL clk, rst, flagwr_en, flagcarry_in, flagzero_in, flag_out : std_logic;
     SIGNAL sel_branch : unsigned (2 DOWNTO 0) := "000";
-    SIGNAL opcode : unsigned(3 DOWNTO 0) := "0000";
 
 BEGIN
     uut : reg_flag PORT MAP(
@@ -32,7 +30,6 @@ BEGIN
         flagcarry_in => flagcarry_in,
         flagzero_in => flagzero_in,
         sel_branch => sel_branch,
-        opcode => opcode,
         flag_out => flag_out
     );
 
@@ -61,98 +58,84 @@ BEGIN
     PROCESS
 
     BEGIN
-        opcode <= "0000";
         sel_branch <= "000";
         flagcarry_in <= '0';
         flagzero_in <= '0';
         flagwr_en <= '0';
         wait for 100 ns;
 
-        opcode <= "0001";
         sel_branch <= "000";
         flagcarry_in <= '1';
         flagzero_in <= '0';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "0010";
         sel_branch <= "000";
         flagcarry_in <= '1';
         flagzero_in <= '0';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "0011";
         sel_branch <= "000";
         flagcarry_in <= '0';
         flagzero_in <= '1';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "1110";
         sel_branch <= "001";
         flagcarry_in <= '0';
         flagzero_in <= '0';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "1001";
         sel_branch <= "000";
         flagcarry_in <= '1';
         flagzero_in <= '0';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "1110";
         sel_branch <= "010";
         flagcarry_in <= '0';
         flagzero_in <= '0';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "1001";
         sel_branch <= "000";
         flagcarry_in <= '0';
         flagzero_in <= '1';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "1110";
         sel_branch <= "100";
         flagcarry_in <= '0';
         flagzero_in <= '0';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "0011";
         sel_branch <= "000";
         flagcarry_in <= '1';
         flagzero_in <= '0';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "1110";
         sel_branch <= "010";
         flagcarry_in <= '0';
         flagzero_in <= '0';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "1110";
         sel_branch <= "000";
         flagcarry_in <= '0';
         flagzero_in <= '0';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "1110";
         sel_branch <= "001";
         flagcarry_in <= '0';
         flagzero_in <= '0';
         flagwr_en <= '1';
         wait for 100 ns;
 
-        opcode <= "1110";
         sel_branch <= "100";
         flagcarry_in <= '0';
         flagzero_in <= '0';

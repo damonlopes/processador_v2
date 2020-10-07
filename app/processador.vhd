@@ -53,9 +53,6 @@ ARCHITECTURE a_processador OF processador IS
         PORT (
             clk, rst : IN std_logic; -- Portas de clock e reset da FSM
 
-            enable_pc : OUT std_logic; -- Porta lógica de enable da escrita no PC
-            enable_rom : OUT std_logic; -- Porta lógica de enable da escrita no REG_ROM
-            enable_banco : OUT std_logic; -- Porta lógica de enable da escrita no Banco de registradores
             estado : OUT unsigned(1 DOWNTO 0) := "00" -- Porta para indicar o estado atual da FSM
         );
     END COMPONENT;
@@ -110,7 +107,6 @@ ARCHITECTURE a_processador OF processador IS
             flagcarry_in : IN std_logic;
             flagzero_in : IN std_logic;
             sel_branch : IN unsigned (2 DOWNTO 0) := "000";
-            opcode : IN unsigned (3 DOWNTO 0) := "0000";
 
             flag_out : OUT std_logic
         );
@@ -144,17 +140,22 @@ ARCHITECTURE a_processador OF processador IS
 
     COMPONENT uc IS
         PORT (
+            estado_fsm : IN unsigned (1 DOWNTO 0) := "00";
             data_rom : IN unsigned(16 DOWNTO 0) := "00000000000000000"; -- valor do opcode da ROM
 
             jump_en : OUT std_logic; -- flag do JUMP
             branch_en : OUT std_logic; -- flag de qualquer operação BRANCH
             sel_mux_reg : OUT std_logic; -- seletor de dados da mux da ula (0 - registrador/1 - constante)
+            pc_wr : OUT std_logic;
+            ram_wr : OUT std_logic;
+            rom_wr : OUT std_logic;
+            flag_wr : OUT std_logic;
+            banco_wr : OUT std_logic;
             sel_ula : OUT unsigned(1 DOWNTO 0) := "00"; --  seletor de operação da ULA (00 - soma/01 - subtração/10 - a<b/11 - a>b)
-            sel_branchtype : OUT unsigned(2 downto 0) := "000";
             sel_wr_reg : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor para qual registrador o resultado será escrito
+            sel_branchtype : OUT unsigned(2 DOWNTO 0) := "000";
             sel_regorigem : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor do registrador que a saída está conectado na mux
-            sel_regdestino : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor do registrador que a saída está conectado direto na ULA, e será o destino do resultado da mesma
-            sel_opcode : OUT unsigned(3 DOWNTO 0) := "0000"
+            sel_regdestino : OUT unsigned(2 DOWNTO 0) := "000" -- seletor do registrador que a saída está conectado direto na ULA, e será o destino do resultado da mesma
         );
     END COMPONENT;
 
@@ -170,10 +171,9 @@ ARCHITECTURE a_processador OF processador IS
         );
     END COMPONENT;
 
-    SIGNAL sel_data_pc, sel_data_ula, pc_en, rom_en, banco_en, sel_branch, sel_cmp, ula_carry, ula_zero : std_logic;
-    SIGNAL sel_op_ula : unsigned(1 DOWNTO 0) := "00";
+    SIGNAL sel_data_pc, sel_data_ula, pc_en, ram_en, rom_en, flag_en, banco_en, sel_branch, sel_cmp, ula_carry, ula_zero : std_logic;
+    SIGNAL uc_estado, sel_op_ula : unsigned(1 DOWNTO 0) := "00";
     SIGNAL sel_bancoreg1, sel_bancoreg2, sel_bancoregwr, uc_branchtype : unsigned(2 DOWNTO 0) := "000";
-    SIGNAL uc_opcode : unsigned (3 DOWNTO 0) := "0000";
     SIGNAL dado_pc, dado_endereco, dado_adder, dado_adder_one, dado_adder_x : unsigned(6 DOWNTO 0) := "0000000";
     SIGNAL dado_reg1, dado_reg2, dado_mux, dado_ula, dado_signextend : unsigned(15 DOWNTO 0) := "0000000000000000";
     SIGNAL dado_rom, dado_reg_rom : unsigned(16 DOWNTO 0) := "00000000000000000";
@@ -206,10 +206,7 @@ BEGIN
     maq_estados_top : maq_estados PORT MAP(
         clk => clk,
         rst => rst,
-        enable_pc => pc_en,
-        enable_rom => rom_en,
-        enable_banco => banco_en,
-        estado => estado_out
+        estado => uc_estado
     );
 
     mux_pc_top : mux_pc PORT MAP(
@@ -243,11 +240,10 @@ BEGIN
     reg_flag_top : reg_flag PORT MAP(
         clk => clk,
         rst => rst,
-        flagwr_en => banco_en,
+        flagwr_en => flag_en,
         flagcarry_in => ula_carry,
         flagzero_in => ula_zero,
         sel_branch => uc_branchtype,
-        opcode => uc_opcode,
         flag_out => sel_cmp
     );
 
@@ -271,16 +267,21 @@ BEGIN
     );
 
     uc_top : uc PORT MAP(
+        estado_fsm => uc_estado,
         data_rom => dado_reg_rom,
         jump_en => sel_data_pc,
         branch_en => sel_branch,
         sel_mux_reg => sel_data_ula,
+        pc_wr => pc_en,
+        ram_wr =>ram_en,
+        rom_wr =>rom_en,
+        flag_wr =>flag_en,
+        banco_wr =>banco_en,
         sel_ula => sel_op_ula,
         sel_branchtype => uc_branchtype,
         sel_wr_reg => sel_bancoregwr,
         sel_regorigem => sel_bancoreg1,
-        sel_regdestino => sel_bancoreg2,
-        sel_opcode => uc_opcode
+        sel_regdestino => sel_bancoreg2
     );
 
     ula_top : ula PORT MAP(
@@ -294,6 +295,7 @@ BEGIN
 
     pc_out <= dado_endereco;
     opcode <= dado_reg_rom;
+    estado_out <= uc_estado;
     reg1_out <= dado_reg1;
     reg2_out <= dado_reg2;
     ula_out <= dado_ula;

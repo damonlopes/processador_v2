@@ -4,7 +4,7 @@ USE ieee.numeric_std.ALL;
 
 ENTITY uc IS
 	PORT (
-		estado_fsm : IN unsigned (1 DOWNTO 0) := "00";
+		estado : IN unsigned (1 DOWNTO 0) := "00";
 		data_rom : IN unsigned(16 DOWNTO 0) := "00000000000000000"; -- valor do opcode da ROM
 
 		jump_en : OUT std_logic; -- flag do JUMP
@@ -19,7 +19,8 @@ ENTITY uc IS
 		sel_wr_reg : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor para qual registrador o resultado será escrito
 		sel_branchtype : OUT unsigned(2 DOWNTO 0) := "000";
 		sel_regorigem : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor do registrador que a saída está conectado na mux
-		sel_regdestino : OUT unsigned(2 DOWNTO 0) := "000" -- seletor do registrador que a saída está conectado direto na ULA, e será o destino do resultado da mesma
+		sel_regdestino : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor do registrador que a saída está conectado direto na ULA, e será o destino do resultado da mesma
+		sel_opcode : OUT unsigned(3 DOWNTO 0) := "0000"
 	);
 END ENTITY;
 
@@ -35,7 +36,7 @@ BEGIN
 	constante <= data_rom(12 DOWNTO 6); -- Puxa os bits da constante
 	reg1 <= data_rom(5 DOWNTO 3); -- Puxa os bits do registrador 1
 	reg2 <= data_rom(2 DOWNTO 0); -- Puxa os bits do registrador 2
-	state <= estado_fsm;
+	state <= estado;
 
 	PROCESS (opcode, reg1, reg2, state)
 	BEGIN
@@ -49,6 +50,7 @@ BEGIN
 				sel_wr_reg <= reg2; -- Registrador onde vai ser guardado o resultado
 				sel_regorigem <= "000"; -- Como vai usar a constante na ULA, não importa
 				sel_regdestino <= reg2; -- Registrador que será utilizado na ULA
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '1';
@@ -63,6 +65,7 @@ BEGIN
 				sel_wr_reg <= reg2; -- Registrador onde vai ser guardado o resultado
 				sel_regorigem <= reg1; -- Registrador que será utilizado na ULA
 				sel_regdestino <= reg2; -- Registrador que será utilizado na ULA
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '1';
@@ -77,6 +80,7 @@ BEGIN
 				sel_wr_reg <= reg2; -- Registrador onde vai ser guardado o resultado
 				sel_regorigem <= reg1; -- Registrador que será utilizado na ULA
 				sel_regdestino <= reg2; -- Registrador que será utilizado na ULA
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '1';
@@ -91,6 +95,7 @@ BEGIN
 				sel_wr_reg <= reg1; -- Registrador onde vai ser guardado o resultado
 				sel_regorigem <= reg2; -- Registrador que será utilizado na ULA
 				sel_regdestino <= reg1; -- Registrador que será utilizado na ULA
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '1';
@@ -105,6 +110,7 @@ BEGIN
 				sel_wr_reg <= reg2; -- Registrador onde vai ser guardado o resultado
 				sel_regorigem <= "000"; -- Como é uma operação de MOV com constante, não importa
 				sel_regdestino <= "000"; -- Como é uma operação de MOV, não importa
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '0';
@@ -119,6 +125,7 @@ BEGIN
 				sel_wr_reg <= reg2; -- Registrador onde vai ser guardado o resultado
 				sel_regorigem <= reg1; -- Registrador que será utilizado na ULA
 				sel_regdestino <= "000"; -- Como é uma operação de MOV, não importa
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '0';
@@ -133,6 +140,7 @@ BEGIN
 				sel_wr_reg <= "000"; -- Como é operação de comparação, não importa
 				sel_regorigem <= "000"; -- Como vai usar a constante na ULA, não importa
 				sel_regdestino <= reg2; -- Registrador que será utilizado na ULA
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '1';
@@ -147,6 +155,7 @@ BEGIN
 				sel_wr_reg <= "000"; -- Como é operação de comparação, não importa
 				sel_regorigem <= reg1; -- Registrador que será utilizado na ULA
 				sel_regdestino <= reg2; -- Registrador que será utilizado na ULA
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '1';
@@ -161,6 +170,7 @@ BEGIN
 				sel_wr_reg <= "000"; -- Como é operação de jump, não importa
 				sel_regorigem <= "000"; -- Como é operação de jump, não importa
 				sel_regdestino <= "000"; -- Como é operação de jump, não importa
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '0';
@@ -175,6 +185,7 @@ BEGIN
 				sel_wr_reg <= "000"; -- Como é operação de jump, não importa
 				sel_regorigem <= "000"; -- Como é operação de jump, não importa
 				sel_regdestino <= "000"; -- Como é operação de jump, não importa
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '1';
 					flag_wr <= '0';
@@ -189,6 +200,7 @@ BEGIN
 				sel_wr_reg <= "000"; -- Como é operação de branch, não importa
 				sel_regorigem <= "000"; -- Como é operação de branch, não importa
 				sel_regdestino <= "000"; -- Como é operação de branch, não importa
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '0';
@@ -203,6 +215,7 @@ BEGIN
 				sel_wr_reg <= "000"; -- Como é operação de jump, não importa
 				sel_regorigem <= "000"; -- Como é operação de jump, não importa
 				sel_regdestino <= "000"; -- Como é operação de jump, não importa
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '0';
@@ -217,6 +230,7 @@ BEGIN
 				sel_wr_reg <= "000"; -- Como é operação de NOP, não importa
 				sel_regorigem <= "000"; -- Como é operação de NOP, não importa
 				sel_regdestino <= "000"; -- Como é operação de NOP, não importa
+				sel_opcode <= opcode;
 				IF (state = "10") THEN
 					ram_wr <= '0';
 					flag_wr <= '0';

@@ -8,7 +8,7 @@ END ENTITY;
 ARCHITECTURE a_uc_tb OF uc_tb IS
 	COMPONENT uc
 		PORT (
-			estado_fsm : IN unsigned (1 DOWNTO 0) := "00";
+			estado : IN unsigned (1 DOWNTO 0) := "00";
 			data_rom : IN unsigned(16 DOWNTO 0) := "00000000000000000"; -- valor do opcode da ROM
 
 			jump_en : OUT std_logic; -- flag do JUMP
@@ -23,13 +23,15 @@ ARCHITECTURE a_uc_tb OF uc_tb IS
 			sel_wr_reg : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor para qual registrador o resultado será escrito
 			sel_branchtype : OUT unsigned(2 DOWNTO 0) := "000";
 			sel_regorigem : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor do registrador que a saída está conectado na mux
-			sel_regdestino : OUT unsigned(2 DOWNTO 0) := "000" -- seletor do registrador que a saída está conectado direto na ULA, e será o destino do resultado da mesma
+			sel_regdestino : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor do registrador que a saída está conectado direto na ULA, e será o destino do resultado da mesma
+			sel_opcode : OUT unsigned(3 DOWNTO 0) := "0000"
 		);
 	END COMPONENT;
 
 	SIGNAL jump_en, branch_en, sel_mux_reg, pc_wr, ram_wr, rom_wr, flag_wr, banco_wr : std_logic;
-	SIGNAL sel_ula, estado_fsm : unsigned(1 DOWNTO 0) := "00";
+	SIGNAL sel_ula, estado : unsigned(1 DOWNTO 0) := "00";
 	SIGNAL sel_branchtype, sel_wr_reg, sel_regorigem, sel_regdestino : unsigned(2 DOWNTO 0) := "000";
+	SIGNAL sel_opcode : unsigned (3 DOWNTO 0) := "0000";
 	SIGNAL data_rom : unsigned(16 DOWNTO 0) := "00000000000000000";
 
 BEGIN
@@ -45,11 +47,12 @@ BEGIN
 		flag_wr => flag_wr,
 		banco_wr => banco_wr,
 		sel_ula => sel_ula,
-		estado_fsm => estado_fsm,
+		estado => estado,
 		sel_branchtype => sel_branchtype,
 		sel_wr_reg => sel_wr_reg,
 		sel_regorigem => sel_regorigem,
-		sel_regdestino => sel_regdestino
+		sel_regdestino => sel_regdestino,
+		sel_opcode => sel_opcode
 	);
 	-- Início do tb da UC(provisória)
 	PROCESS
@@ -57,55 +60,55 @@ BEGIN
 	BEGIN
 
 		data_rom <= "00000011110000110"; -- Opcode = 0x00786 (NOP - não importa o restante ali, é lixo mesmo)
-		estado_fsm <= "00";
+		estado <= "00";
 		WAIT FOR 100 ns;
 
 		data_rom <= "00100000101000011"; -- Opcode = 0x04143 (ADD 5, R8)
-		estado_fsm <= "00";
+		estado <= "00";
 		WAIT FOR 100 ns;
 
 		data_rom <= "00110000000011101"; -- Opcode = 0x0601D (ADD R8, R10)
-		estado_fsm <= "00";
+		estado <= "00";
 		WAIT FOR 100 ns;
 
 		data_rom <= "01000000000110101"; -- Opcode = 0x08035 (SUB R11, R10)
-		estado_fsm <= "01";
+		estado <= "01";
 		WAIT FOR 100 ns;
 
 		data_rom <= "01110000000101011"; -- Opcode = 0x0E02B (MOV R10, R8)
-		estado_fsm <= "00";
+		estado <= "00";
 		WAIT FOR 100 ns;
 
 		data_rom <= "11110000011000000"; -- Opcode = 0x1E0C0 (JR 3)
-		estado_fsm <= "00";
+		estado <= "00";
 		WAIT FOR 100 ns;
 
 		data_rom <= "01100000011000011"; -- Opcode = 0x0C0C3 (MOV 3, R8)
-		estado_fsm <= "01";
+		estado <= "01";
 		WAIT FOR 100 ns;
 
 		data_rom <= "01010000000001101"; -- Opcode = 0x0A00D (SUBR R6, R8)
-		estado_fsm <= "00";
+		estado <= "00";
 		WAIT FOR 100 ns;
 
 		data_rom <= "10101000001001101"; -- Opcode = 0x1504D (BL 65, R6, R8)
-		estado_fsm <= "00";
+		estado <= "00";
 		WAIT FOR 100 ns;
 
 		data_rom <= "10101000001001101"; -- Opcode = 0x1504D (BL 65, R6, R8)
-		estado_fsm <= "10";
+		estado <= "10";
 		WAIT FOR 100 ns;
 
 		data_rom <= "10111000001001101"; -- Opcode = 0x1704D (BEQ, 65 R6, R8)
-		estado_fsm <= "00";
+		estado <= "00";
 		WAIT FOR 100 ns;
 
 		data_rom <= "01100000011000011"; -- Opcode = 0x0C0C3 (MOV 3, R8)
-		estado_fsm <= "11";
+		estado <= "11";
 		WAIT FOR 100 ns;
 
 		data_rom <= "10111000001001101"; -- Opcode = 0x1704D (BEQ, 65 R6, R8)
-		estado_fsm <= "10";
+		estado <= "10";
 		WAIT FOR 100 ns;
 		WAIT;
 

@@ -9,6 +9,8 @@
 0111 - MOV  reg1, reg2 (GR[reg1] -> GR[reg2])
 1000 - CMP  imm7, reg2 (GR[reg2] - imm7 -> result)
 1001 - CMP  reg1, reg2 (GR[reg2] - GR[reg1] -> result)
+1010 - LD.W disp7[reg1], reg2
+1011 - ST.W reg2, disp7[reg1]
 1110 - Bcond imm7 (imm7 + PC -> PC se cumprir as condições)
     tipos de Bcond
         BE (Branch if equal): BBB = 000
@@ -25,7 +27,7 @@
  contudo a execução dele funciona.
 
 Formatos OPCODE:
-1 - Para instruções do tipo ADD/SUB/SUBR/MOV/CMP
+1 - Para instruções do tipo ADD/SUB/SUBR/MOV/CMP/LD.W/ST.W
 
     CCCCIIIIIIIrrrRRR
 
