@@ -15,6 +15,7 @@
 |1001|CMP reg1, reg2|GR[reg2] - GR[reg1] -> result|
 |1110|Bcond imm7|imm7 + PC -> PC (se cumprir as condições)|
 |1111|JMP imm7, reg2|imm7 + GR[reg2] -> PC|
+>A instrução de jump (JMP) não foi implementada do mesmo jeito que está descrito no datasheet do processador, contudo a execução dele funciona.
 
 ### Tipos de Bcond
 - BE (Branch if equal): BBB = 000
@@ -25,8 +26,6 @@
   - verifica a flag carry = 1
 - BH (Branch if higher): BBB = 100
   - verifica se flag carry = 0
-
->A instrução de jump (JMP) não foi implementada do mesmo jeito que está descrito no datasheet do processador, contudo a execução dele funciona.
 
 ## Formatos OPCODE:
 1. Para instruções do tipo ADD/SUB/SUBR/MOV/CMP
