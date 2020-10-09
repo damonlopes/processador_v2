@@ -9,6 +9,7 @@ ENTITY reg_flag IS
         flagwr_en : IN std_logic;
         flagcarry_in : IN std_logic;
         flagzero_in : IN std_logic;
+        flagneg_in : IN std_logic;
         sel_branch : IN unsigned (2 DOWNTO 0) := "000";
 
         flag_out : OUT std_logic
@@ -16,7 +17,7 @@ ENTITY reg_flag IS
 END ENTITY;
 
 ARCHITECTURE a_reg_flag OF reg_flag IS
-    SIGNAL flagcarry_mem, flagzero_mem : std_logic;
+    SIGNAL flagcarry_mem, flagzero_mem, flagneg_mem : std_logic;
 
 BEGIN
 
@@ -26,11 +27,13 @@ BEGIN
         IF rst = '1' THEN
             flagcarry_mem <= '0';
             flagzero_mem <= '0';
+            flagneg_mem <= '0';
             flag_out <= '0';
         ELSIF flagwr_en = '1' THEN
             IF rising_edge(clk) THEN
                 flagcarry_mem <= flagcarry_in;
                 flagzero_mem <= flagzero_in;
+                flagneg_mem <= flagneg_in;
                 flag_out <= '0';
             END IF;
         END IF;
@@ -41,8 +44,12 @@ BEGIN
             flag_out <= NOT flagzero_mem;
         ELSIF sel_branch = "010" THEN -- BL
             flag_out <= flagcarry_mem;
-        ELSIF sel_branch = "100" THEN -- BH
+        ELSIF sel_branch = "011" THEN -- BH
             flag_out <= NOT flagcarry_mem;
+        ELSIF sel_branch <= "100" THEN -- BN
+            flag_out <= flagneg_mem;
+        ELSIF sel_branch <= "101" THEN -- BP
+            flag_out <= NOT flagneg_mem;
         END IF;
 
     END PROCESS;

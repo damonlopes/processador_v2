@@ -13,14 +13,17 @@ END ENTITY;
 ARCHITECTURE a_rom OF rom IS
 	TYPE mem IS ARRAY (0 TO 127) OF unsigned (16 DOWNTO 0); -- De acordo com qual endereço estiver, ele vai mandar um valor
 	CONSTANT conteudo_rom : mem := (-- para a saída da ROM, que vai para a UC e para os outros lugares do processador
-	0 => "01100000000000011", --				MOV     0,  R8      0x0C003
-	1 => "01100000000000100", -- 				MOV     0,  R9      0x0C004
-	2 => "01100011110000110", -- 				MOV     30, R11     0x0C786
-	3 => "00110000000011100", -- 				ADD     R8, R9      0x0601C
-	4 => "00100000001000011", --				ADD     1,  R8      0x04043
-	5 => "10010000000110011", --				CMP		R11, R8		0x12033
-	6 => "11101111101000010", -- 				BL      -3		 	0x1DF42
-	7 => "01110000000100101", --				MOV     R9, R10     0x0E025
+	0 => "01100000101000001", --				MOV 5,  R6 		    0x0C141
+	1 => "01100001010000010", -- 				MOV 10, R7   		0x0C282
+	2 => "10110000001011010", -- 				ST.W 1[R8], R7      0x1605A
+	3 => "10110000000011001", -- 				ST.W 0[R8], R6      0x16019
+	4 => "10100000000111011", --				LD.W R8, 0[R12]     0x1403B
+	5 => "10100000001111100", --				LD.W R9, 1[R11]		0x1407C
+	6 => "00100000001000011", --				ADD 1, R8			0x04043
+	7 => "00110000000011100", --                ADD R8, R9			0x0601C
+	8 => "10110000010000100", --				ST.W 2[R0], R9		0x16084
+	9 => "10110000011000011", --				ST.W 3[R0], R8		0x160C3
+
 	OTHERS => (OTHERS => '0')
 	); -- (r6 = 001(r1), r7 = 010(r2) e por assim vai)
 

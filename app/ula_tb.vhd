@@ -14,12 +14,13 @@ ARCHITECTURE a_ula_tb OF ula_tb IS
 
             cmp_carry : OUT std_logic; -- Flag de carry para a ULA
             cmp_zero : OUT std_logic; -- Flag de zero para a ULA
+            cmp_neg : OUT std_logic; -- Flag de negativo para a ULA
             out_data : OUT unsigned (15 DOWNTO 0) := "0000000000000000" -- Saída com o resultado da operação da ULA (soma/subtração)
         );
     END COMPONENT;
     SIGNAL op : unsigned (1 DOWNTO 0) := "00";
     SIGNAL in_a, in_b, out_data : unsigned (15 DOWNTO 0) := "0000000000000000";
-    SIGNAL cmp_carry, cmp_zero : std_logic;
+    SIGNAL cmp_carry, cmp_zero, cmp_neg : std_logic;
 
 BEGIN
     uut : ula PORT MAP(-- Conectando as portas da ULA
@@ -28,7 +29,8 @@ BEGIN
         in_b => in_b,
         out_data => out_data,
         cmp_carry => cmp_carry,
-        cmp_zero => cmp_zero
+        cmp_zero => cmp_zero,
+        cmp_neg => cmp_neg
     );
     -- Início do tb da ULA
     PROCESS

@@ -10,6 +10,7 @@ ENTITY ula IS
 
 		cmp_carry : OUT std_logic; -- Flag de carry para a ULA
 		cmp_zero : OUT std_logic; -- Flag de zero para a ULA
+		cmp_neg : OUT std_logic; -- Flag de negativo para a ULA
 		out_data : OUT unsigned (15 DOWNTO 0) := "0000000000000000" -- Saída com o resultado da operação da ULA (soma/subtração)
 	);
 END ENTITY;
@@ -25,18 +26,22 @@ BEGIN
 
 	out_data <= soma_17(15 DOWNTO 0) WHEN op = "00" ELSE -- Saída = soma das portas A e B
 		subtracao_17(15 DOWNTO 0) WHEN op = "01" ELSE -- Saída = subtração das portas A e B
-		in_b WHEN op = "11" ELSE -- Saída = constante/registrador nas operações de MOV
+		in_b WHEN op = "11" ELSE -- Saída = constante/registrador nas operações de MOV/LD.W/ST.W
 		"0000000000000000";
 
 	cmp_carry <= soma_17(16) WHEN op = "00" ELSE
-		subtracao_17(16) when op = "01" ELSE
-		subtracao_17(16) when op = "10" ELSE
+		subtracao_17(16) WHEN op = "01" ELSE
+		subtracao_17(16) WHEN op = "10" ELSE
 		'0';
 
-	cmp_zero <= '1' when soma_17(15 downto 0) = "0000000000000000" and op = "00" else
-		'1' when subtracao_17(15 downto 0) = "0000000000000000" and op = "01" else
-		'1' when subtracao_17(15 downto 0) = "0000000000000000" and op = "10" else
+	cmp_neg <= '1' WHEN soma_17(15 DOWNTO 0) > "0111111111111111" AND op = "00" ELSE
+		'1' WHEN subtracao_17(15 DOWNTO 0) > "0111111111111111" AND op = "01" ELSE
+		'1' WHEN subtracao_17(15 DOWNTO 0) > "0111111111111111" AND op = "10" ELSE
 		'0';
 
+	cmp_zero <= '1' WHEN soma_17(15 DOWNTO 0) = "0000000000000000" AND op = "00" ELSE
+		'1' WHEN subtracao_17(15 DOWNTO 0) = "0000000000000000" AND op = "01" ELSE
+		'1' WHEN subtracao_17(15 DOWNTO 0) = "0000000000000000" AND op = "10" ELSE
+		'0';
 
 END ARCHITECTURE;

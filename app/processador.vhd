@@ -88,6 +88,16 @@ ARCHITECTURE a_processador OF processador IS
         );
     END COMPONENT;
 
+    COMPONENT mux_ram IS
+        PORT (
+            sel_mux_ram : IN std_logic; -- Porta seletora da mux
+            data0_mux_ram : IN unsigned(15 DOWNTO 0) := "0000000000000000"; -- Entrada 0 da mux = ULA
+            data1_mux_ram : IN unsigned(15 DOWNTO 0) := "0000000000000000"; -- Entrada 1 da mux = RAM
+
+            out_mux_ram : OUT unsigned(15 DOWNTO 0) := "0000000000000000" -- Saída da mux
+        );
+    END COMPONENT;
+
     COMPONENT pc IS
         PORT (
             clk : IN std_logic; -- Porta do clock do PC
@@ -99,6 +109,16 @@ ARCHITECTURE a_processador OF processador IS
         );
     END COMPONENT;
 
+    COMPONENT ram IS
+        PORT (
+            clk : IN std_logic;
+            ramwr_en : IN std_logic;
+            endereco : IN unsigned (6 DOWNTO 0) := "0000000";
+            dadoram_in : IN unsigned (15 DOWNTO 0) := "0000000000000000";
+            dadoram_out : OUT unsigned (15 DOWNTO 0) := "0000000000000000"
+        );
+    END COMPONENT;
+
     COMPONENT reg_flag IS
         PORT (
             clk : IN std_logic;
@@ -106,6 +126,7 @@ ARCHITECTURE a_processador OF processador IS
             flagwr_en : IN std_logic;
             flagcarry_in : IN std_logic;
             flagzero_in : IN std_logic;
+            flagneg_in : IN std_logic;
             sel_branch : IN unsigned (2 DOWNTO 0) := "000";
 
             flag_out : OUT std_logic
@@ -140,20 +161,21 @@ ARCHITECTURE a_processador OF processador IS
 
     COMPONENT uc IS
         PORT (
-            estado_fsm : IN unsigned (1 DOWNTO 0) := "00";
+            estado_fsm : IN unsigned (1 DOWNTO 0) := "00"; -- estado atual do programa 
             data_rom : IN unsigned(16 DOWNTO 0) := "00000000000000000"; -- valor do opcode da ROM
 
             jump_en : OUT std_logic; -- flag do JUMP
             branch_en : OUT std_logic; -- flag de qualquer operação BRANCH
             sel_mux_reg : OUT std_logic; -- seletor de dados da mux da ula (0 - registrador/1 - constante)
-            pc_wr : OUT std_logic;
-            ram_wr : OUT std_logic;
-            rom_wr : OUT std_logic;
-            flag_wr : OUT std_logic;
-            banco_wr : OUT std_logic;
+            sel_mux_ram : OUT std_logic; -- seletor de dados da mux da ram (0 - ULA/1 - RAM)
+            pc_wr : OUT std_logic; -- write_enable do PC
+            ram_wr : OUT std_logic; -- write_enable da RAM
+            rom_wr : OUT std_logic; -- write_enable do Reg. de instrução da ROM
+            flag_wr : OUT std_logic; -- write_enable da Reg. de Flags
+            banco_wr : OUT std_logic; -- write_eneble do Banco de regs.
             sel_ula : OUT unsigned(1 DOWNTO 0) := "00"; --  seletor de operação da ULA (00 - soma/01 - subtração/10 - a<b/11 - a>b)
             sel_wr_reg : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor para qual registrador o resultado será escrito
-            sel_branchtype : OUT unsigned(2 DOWNTO 0) := "000";
+            sel_branchtype : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor do tipo de branch
             sel_regorigem : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor do registrador que a saída está conectado na mux
             sel_regdestino : OUT unsigned(2 DOWNTO 0) := "000" -- seletor do registrador que a saída está conectado direto na ULA, e será o destino do resultado da mesma
         );
@@ -167,15 +189,16 @@ ARCHITECTURE a_processador OF processador IS
 
             cmp_carry : OUT std_logic; -- Flag de carry para a ULA
             cmp_zero : OUT std_logic; -- Flag de zero para a ULA
+            cmp_neg : OUT std_logic; -- Flag de negativo para a ULA
             out_data : OUT unsigned (15 DOWNTO 0) := "0000000000000000" -- Saída com o resultado da operação da ULA (soma/subtração)
         );
     END COMPONENT;
 
-    SIGNAL sel_data_pc, sel_data_ula, pc_en, ram_en, rom_en, flag_en, banco_en, sel_branch, sel_cmp, ula_carry, ula_zero : std_logic;
+    SIGNAL sel_data_pc, sel_data_ula, sel_data_ram, pc_en, ram_en, rom_en, flag_en, banco_en, sel_branch, sel_cmp, ula_carry, ula_zero, ula_neg : std_logic;
     SIGNAL uc_estado, sel_op_ula : unsigned(1 DOWNTO 0) := "00";
     SIGNAL sel_bancoreg1, sel_bancoreg2, sel_bancoregwr, uc_branchtype : unsigned(2 DOWNTO 0) := "000";
     SIGNAL dado_pc, dado_endereco, dado_adder, dado_adder_one, dado_adder_x : unsigned(6 DOWNTO 0) := "0000000";
-    SIGNAL dado_reg1, dado_reg2, dado_mux, dado_ula, dado_signextend : unsigned(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL dado_ram, dado_reg1, dado_reg2, dado_mux, dado_ula, dado_signextend, dado_out : unsigned(15 DOWNTO 0) := "0000000000000000";
     SIGNAL dado_rom, dado_reg_rom : unsigned(16 DOWNTO 0) := "00000000000000000";
 
 BEGIN
@@ -198,7 +221,7 @@ BEGIN
         sel_reg0 => sel_bancoreg1,
         sel_reg1 => sel_bancoreg2,
         sel_wr_reg => sel_bancoregwr,
-        datawr_reg => dado_ula,
+        datawr_reg => dado_out,
         data_reg0 => dado_reg1,
         data_reg1 => dado_reg2
     );
@@ -229,6 +252,13 @@ BEGIN
         out_mux_ula => dado_mux
     );
 
+    mux_ram_top : mux_ram PORT MAP(
+        sel_mux_ram => sel_data_ram,
+        data0_mux_ram => dado_ula,
+        data1_mux_ram => dado_ram,
+        out_mux_ram => dado_out
+    );
+
     pc_top : pc PORT MAP(
         clk => clk,
         rst => rst,
@@ -237,12 +267,21 @@ BEGIN
         data_out_pc => dado_endereco
     );
 
+    ram_top : ram PORT MAP(
+        clk => clk,
+        ramwr_en => ram_en,
+        endereco => dado_ula(6 DOWNTO 0),
+        dadoram_in => dado_reg1,
+        dadoram_out => dado_ram
+    );
+
     reg_flag_top : reg_flag PORT MAP(
         clk => clk,
         rst => rst,
         flagwr_en => flag_en,
         flagcarry_in => ula_carry,
         flagzero_in => ula_zero,
+        flagneg_in => ula_neg,
         sel_branch => uc_branchtype,
         flag_out => sel_cmp
     );
@@ -272,11 +311,12 @@ BEGIN
         jump_en => sel_data_pc,
         branch_en => sel_branch,
         sel_mux_reg => sel_data_ula,
+        sel_mux_ram => sel_data_ram,
         pc_wr => pc_en,
-        ram_wr =>ram_en,
-        rom_wr =>rom_en,
-        flag_wr =>flag_en,
-        banco_wr =>banco_en,
+        ram_wr => ram_en,
+        rom_wr => rom_en,
+        flag_wr => flag_en,
+        banco_wr => banco_en,
         sel_ula => sel_op_ula,
         sel_branchtype => uc_branchtype,
         sel_wr_reg => sel_bancoregwr,
@@ -290,7 +330,8 @@ BEGIN
         in_b => dado_mux,
         out_data => dado_ula,
         cmp_carry => ula_carry,
-        cmp_zero => ula_zero
+        cmp_zero => ula_zero,
+        cmp_neg => ula_neg
     );
 
     pc_out <= dado_endereco;

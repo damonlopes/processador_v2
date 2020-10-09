@@ -8,26 +8,27 @@ END ENTITY;
 ARCHITECTURE a_uc_tb OF uc_tb IS
 	COMPONENT uc
 		PORT (
-			estado_fsm : IN unsigned (1 DOWNTO 0) := "00";
+			estado_fsm : IN unsigned (1 DOWNTO 0) := "00"; -- estado atual do programa 
 			data_rom : IN unsigned(16 DOWNTO 0) := "00000000000000000"; -- valor do opcode da ROM
 
 			jump_en : OUT std_logic; -- flag do JUMP
 			branch_en : OUT std_logic; -- flag de qualquer operação BRANCH
 			sel_mux_reg : OUT std_logic; -- seletor de dados da mux da ula (0 - registrador/1 - constante)
-			pc_wr : OUT std_logic;
-			ram_wr : OUT std_logic;
-			rom_wr : OUT std_logic;
-			flag_wr : OUT std_logic;
-			banco_wr : OUT std_logic;
+			sel_mux_ram : OUT std_logic; -- seletor de dados da mux da ram (0 - ULA/1 - RAM)
+			pc_wr : OUT std_logic; -- write_enable do PC
+			ram_wr : OUT std_logic; -- write_enable da RAM
+			rom_wr : OUT std_logic; -- write_enable do Reg. de instrução da ROM
+			flag_wr : OUT std_logic; -- write_enable da Reg. de Flags
+			banco_wr : OUT std_logic; -- write_eneble do Banco de regs.
 			sel_ula : OUT unsigned(1 DOWNTO 0) := "00"; --  seletor de operação da ULA (00 - soma/01 - subtração/10 - a<b/11 - a>b)
 			sel_wr_reg : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor para qual registrador o resultado será escrito
-			sel_branchtype : OUT unsigned(2 DOWNTO 0) := "000";
+			sel_branchtype : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor do tipo de branch
 			sel_regorigem : OUT unsigned(2 DOWNTO 0) := "000"; -- seletor do registrador que a saída está conectado na mux
 			sel_regdestino : OUT unsigned(2 DOWNTO 0) := "000" -- seletor do registrador que a saída está conectado direto na ULA, e será o destino do resultado da mesma
 		);
 	END COMPONENT;
 
-	SIGNAL jump_en, branch_en, sel_mux_reg, pc_wr, ram_wr, rom_wr, flag_wr, banco_wr : std_logic;
+	SIGNAL jump_en, branch_en, sel_mux_reg, sel_mux_ram, pc_wr, ram_wr, rom_wr, flag_wr, banco_wr : std_logic;
 	SIGNAL sel_ula, estado_fsm : unsigned(1 DOWNTO 0) := "00";
 	SIGNAL sel_branchtype, sel_wr_reg, sel_regorigem, sel_regdestino : unsigned(2 DOWNTO 0) := "000";
 	SIGNAL data_rom : unsigned(16 DOWNTO 0) := "00000000000000000";
@@ -39,6 +40,7 @@ BEGIN
 		jump_en => jump_en, -- Conectando as portas da UC
 		branch_en => branch_en,
 		sel_mux_reg => sel_mux_reg,
+		sel_mux_ram => sel_mux_ram,
 		pc_wr => pc_wr,
 		ram_wr => ram_wr,
 		rom_wr => rom_wr,
